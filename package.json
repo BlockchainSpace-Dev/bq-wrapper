@@ -1,0 +1,27 @@
+{
+  "name": "scraper-game-projects",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/BlockchainSpace-Dev/scraper-game-projects.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BlockchainSpace-Dev/scraper-game-projects/issues"
+  },
+  "homepage": "https://github.com/BlockchainSpace-Dev/scraper-game-projects#readme",
+  "dependencies": {
+    "dotenv": "^16.0.2",
+    "https-proxy-agent": "^5.0.1",
+    "node-abort-controller": "^3.0.1",
+    "node-fetch": "^3.2.10"
+  }
+}
