@@ -19,7 +19,9 @@
   },
   "homepage": "https://github.com/BlockchainSpace-Dev/scraper-game-projects#readme",
   "dependencies": {
-    "dotenv": "^16.0.2",
+    "@google-cloud/bigquery": "^6.0.3",
+    "convict": "^6.2.3",
+    "dayjs": "^1.11.5",
     "https-proxy-agent": "^5.0.1",
     "node-abort-controller": "^3.0.1",
     "node-fetch": "^3.2.10"
