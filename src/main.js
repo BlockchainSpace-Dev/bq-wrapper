@@ -1,63 +1,18 @@
 import { BigQuery } from "@google-cloud/bigquery";
 
+import { handleResponse, queryJoin } from "./helpers/index.js";
+
+import { insert, update, remove, count, find } from "./functions/index.js";
+
 // Initiate Bigquery instance
 const bigquery = new BigQuery();
 
 /**
- * Handle response object for output method
- * @param {{status: string, error: object, query: (string | null), process: object}} params Parameters options
- * @param {string} params.status Status output
- * @param {object} params.error Error output
- * @param {(string | null)} params.query Executed query text
- * @param {object} params.process Object response from query process
- * @param {number} params.process.totalRows Total rows inserted/affected
- * @param {number} params.process.totalBytesProcessed Total Bytes executed query
- * @returns {object} response object
- */
-const handleResponse = ({
-  status = "success",
-  error = null,
-  query = null,
-  process = null,
-}) => {
-  return {
-    status,
-    error,
-    query,
-    totalRows: process?.totalRows || 0,
-    totalBytesProcessed: process?.totalBytesProcessed || 0,
-  };
-};
-
-/**
- * Query join method
- * @param {{ paramsObj: object, delimiters: string }} params Query join parameters options
- * @param {object} params.paramsObj
- * @param {string} params.delimiters
- * @returns {string}
- */
-const queryJoin = ({ paramsObj = {}, delimiters = "" }) =>
-  Object.keys(paramsObj)?.length
-    ? Object.entries(paramsObj)
-        .reduce((prev, next) => {
-          const pushData =
-            typeof next[1] === "string"
-              ? `${next[0]} = "${next[1]}"`
-              : `${next[0]} = ${next[1]}`;
-
-          prev.push(pushData);
-
-          return prev;
-        }, [])
-        .join(delimiters)
-    : null;
-
-/**
- * Repository constructor
- * @param {string} datasource
+ * Database/Repository constructor
+ * @param {string} datasource Name of data source, example: dataset.tablename
  * @returns {object}
  */
-const main = (datasource) => {
+export default (datasource) => {
   if (!typeof datasource === "string")
     throw new Error("datasource must be a text");
 
@@ -74,156 +29,50 @@ const main = (datasource) => {
      * @param {[string | number | object]} data Array of insert data
      * @returns {object} Object response
      */
-    insert: async (data) => {
-      if (!data?.length)
-        throw new Error("Data must be an array object and has a value");
-
-      if (data.length > 1000) {
-        const batchData = data.reduce((prev, next, index) => {
-          if (index % 1000) {
-            prev[prev.length - 1].push(next);
-          } else {
-            prev.push(next);
-          }
-          return prev;
-        }, []);
-
-        let insertBatchProcess = [];
-
-        for (const insertData of batchData) {
-          insertBatchProcess.push(
-            await model.insert(insertData).catch((e) => {
-              throw e;
-            })
-          );
-        }
-
-        // Count total Bytes processed per batch
-        insertBatchProcess = insertBatchProcess.reduce(
-          (prev, next) => {
-            if (next?.totalRows) prev.totalRows += next.totalRows;
-            if (next?.totalBytesProcessed)
-              prev.totalBytesProcessed += next.totalBytesProcessed;
-            return prev;
-          },
-          {
-            totalBytesProcessed: 0,
-            totalRows: 0,
-          }
-        );
-
-        return handleResponse({ process: insertBatchProcess });
-      }
-
-      const insertProcess = await model.insert(data).catch((e) => {
-        throw e;
-      });
-
-      return handleResponse({ process: insertProcess });
-    },
+    insert: (data) => insert(model, handleResponse, data),
 
     /**
      * Update data method
-     * @param {object} data
-     * @param {object} filters
-     * @returns {object}
+     * @param {object} data Object of update data
+     * @param {object} filters Object of filters query
+     * @returns {object} Object response
      */
-    update: async (data, filters) => {
-      if (!typeof data === "object" || !typeof filters === "object")
-        throw new Error("data and filters must be an object");
-
-      // Build update data params query text
-      const updateData = queryJoin({ paramsObj: data, delimiters: "," });
-
-      // Build filters data params query text
-      const filtersData = queryJoin({
-        paramsObj: filters,
-        delimiters: ` AND `,
-      });
-
-      // Build update query text
-      let query = `UPDATE \`${dataset}.${table}\` set ${updateData}`;
-      query += ` WHERE ${filtersData}`;
-
-      // Execute query
-      const updateProcess = await model.query(query).catch((e) => {
-        throw e;
-      });
-
-      return handleResponse({ query, process: updateProcess });
-    },
+    update: (data, filters) =>
+      update(model, handleResponse, queryJoin, data, filters),
 
     /**
      * Delete data method
-     * @param {Object} filters
-     * @returns {Object}
+     * @param {Object} filters Object of filters query
+     * @returns {Object} Object response
      */
-    delete: async (filters) => {
-      if (!typeof filters === "object")
-        return {
-          status: failed,
-          error: new Error("filters must be an object"),
-          query: null,
-        };
-
-      // Build delete data params query text
-      const filtersData = queryJoin({
-        paramsObj: filters,
-        delimiters: " AND ",
-      });
-
-      // Build delete query text
-      let query = `DELETE FROM \`${dataset}.${table}\``;
-      query += ` WHERE ${filtersData}`;
-
-      // Execute query
-      const deleteProcess = await model.query(query).catch((e) => {
-        throw e;
-      });
-
-      return handleResponse({ query, process: deleteProcess });
-    },
+    delete: (filters) => remove(model, handleResponse, queryJoin, filters),
 
     /**
-     *
-     * @param {Object}
-     * @param
-     * @returns
+     * Count rows method
+     * @param {object} filters Object of filters query
+     * @returns {object} Object response
      */
-    count: async (filters = null) => {
-      let query = `SELECT COUNT(*) FROM \`${dataset}.${table}\``;
+    count: (filters = null) => count(model, handleResponse, queryJoin, filters),
 
-      if (filters) {
-        if (!typeof filters === "object")
-          throw new Error("filters must be an object");
-
-        const filtersData = queryJoin({
-          paramsObj: filters,
-          delimiters: " AND ",
-        });
-
-        query += ` WHERE ${filtersData} `;
-      }
-
-      const countProcess = await model.query(query).catch((e) => {
-        throw e;
-      });
-
-      return handleResponse({ query, process: countProcess });
-    },
+    /**
+     * Find data method
+     * @param {object} fields Object table fieldsname
+     * @param {object} fitlers Object of filters query
+     * @returns {object} Object response
+     */
+    find: (fields = null, filters = null) =>
+      find(model, handleResponse, queryJoin, fields, filters),
 
     /** @TODO */
-    max: () => {
-      return handleResponse({});
-    },
+    max: () => {},
+
+    /** @TODO */
+    isExsists: () => {},
+
+    /** @TODO */
+    metadata: () => {},
+
+    /** @TODO */
+    create: () => {},
   };
-};
-
-// Default export
-export default main;
-
-// Export for unit testing purpose
-export const units = {
-  handleResponse,
-  queryJoin,
 };
