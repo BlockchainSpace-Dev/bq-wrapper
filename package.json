@@ -1,29 +1,32 @@
 {
-  "name": "scraper-game-projects",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@bcsp/bq-wrapper",
+  "version": "1.0.0-alpha",
+  "description": "A wrapper function for biquery client node.js",
+  "main": "./src/main.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://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@github.com/BlockchainSpace-Dev/scraper-game-projects.git"
+    "url": "https://github.com/BlockchainSpace-Dev/scraper-game-projects.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "bigquery"
+  ],
+  "author": "Munir AP",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/BlockchainSpace-Dev/scraper-game-projects/issues"
   },
   "homepage": "https://github.com/BlockchainSpace-Dev/scraper-game-projects#readme",
   "dependencies": {
-    "@google-cloud/bigquery": "^6.0.3",
-    "convict": "^6.2.3",
-    "dayjs": "^1.11.5",
-    "https-proxy-agent": "^5.0.1",
-    "node-abort-controller": "^3.0.1",
-    "node-fetch": "^3.2.10"
+    "@google-cloud/bigquery": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   }
 }
