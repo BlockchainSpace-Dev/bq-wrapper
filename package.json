@@ -1,5 +1,5 @@
 {
-  "name": "@bcsp/bq-wrapper",
+  "name": "@blockchainSpace-dev/bq-wrapper",
   "version": "1.0.0-alpha",
   "description": "A wrapper function for biquery client node.js",
   "main": "./src/main.js",
