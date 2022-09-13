@@ -1,11 +1,61 @@
 import { BigQuery } from "@google-cloud/bigquery";
 
+// Initiate Bigquery instance
 const bigquery = new BigQuery();
 
 /**
+ * Handle response object for output method
+ * @param {{status: string, error: object, query: (string | null), process: object}} params Parameters options
+ * @param {string} params.status Status output
+ * @param {object} params.error Error output
+ * @param {(string | null)} params.query Executed query text
+ * @param {object} params.process Object response from query process
+ * @param {number} params.process.totalRows Total rows inserted/affected
+ * @param {number} params.process.totalBytesProcessed Total Bytes executed query
+ * @returns {object} response object
+ */
+const handleResponse = ({
+  status = "success",
+  error = null,
+  query = null,
+  process = null,
+}) => {
+  return {
+    status,
+    error,
+    query,
+    totalRows: process?.totalRows || 0,
+    totalBytesProcessed: process?.totalBytesProcessed || 0,
+  };
+};
+
+/**
+ * Query join method
+ * @param {{ paramsObj: object, delimiters: string }} params Query join parameters options
+ * @param {object} params.paramsObj
+ * @param {string} params.delimiters
+ * @returns {string}
+ */
+const queryJoin = ({ paramsObj = {}, delimiters = "" }) =>
+  Object.keys(paramsObj)?.length
+    ? Object.entries(paramsObj)
+        .reduce((prev, next) => {
+          const pushData =
+            typeof next[1] === "string"
+              ? `${next[0]} = "${next[1]}"`
+              : `${next[0]} = ${next[1]}`;
+
+          prev.push(pushData);
+
+          return prev;
+        }, [])
+        .join(delimiters)
+    : null;
+
+/**
  * Repository constructor
- * @param {text} datasource
- * @returns {Object}
+ * @param {string} datasource
+ * @returns {object}
  */
 const main = (datasource) => {
   if (!typeof datasource === "string")
@@ -21,16 +71,12 @@ const main = (datasource) => {
   return {
     /**
      * Insert data method
-     * @param {Array} data
-     * @returns {Object}
+     * @param {[string | number | object]} data Array of insert data
+     * @returns {object} Object response
      */
     insert: async (data) => {
       if (!data?.length)
-        return {
-          status: "failed",
-          error: new Error("Data must be an array object and has a value"),
-          query: null,
-        };
+        throw new Error("Data must be an array object and has a value");
 
       if (data.length > 1000) {
         const batchData = data.reduce((prev, next, index) => {
@@ -47,11 +93,7 @@ const main = (datasource) => {
         for (const insertData of batchData) {
           insertBatchProcess.push(
             await model.insert(insertData).catch((e) => {
-              return {
-                status: "failed",
-                error: e,
-                query: null,
-              };
+              throw e;
             })
           );
         }
@@ -70,87 +112,45 @@ const main = (datasource) => {
           }
         );
 
-        return {
-          status: "success",
-          totalRows: insertBatchProcess?.totalRows || 0,
-          totalBytesProcessed: insertBatchProcess?.totalBytesProcessed || 0,
-          query: null,
-        };
+        return handleResponse({ process: insertBatchProcess });
       }
 
       const insertProcess = await model.insert(data).catch((e) => {
-        return {
-          status: "failed",
-          error: e,
-          query: null,
-        };
+        throw e;
       });
 
-      return {
-        status: "success",
-        totalRows: insertProcess?.totalRows,
-        totalBytesProcessed: insertProcess?.totalBytesProcessed,
-        query: null,
-      };
+      return handleResponse({ process: insertProcess });
     },
 
     /**
      * Update data method
-     * @param {Object} data
-     * @param {Object} filters
-     * @returns {Object}
+     * @param {object} data
+     * @param {object} filters
+     * @returns {object}
      */
     update: async (data, filters) => {
       if (!typeof data === "object" || !typeof filters === "object")
-        return {
-          status: failed,
-          error: new Error("data and filters must be an object"),
-          query: null,
-        };
+        throw new Error("data and filters must be an object");
 
       // Build update data params query text
-      const updateData = Object.entries(data).reduce((prev, next) => {
-        const pushData =
-          typeof next === "string"
-            ? `${next[0]} = "${next[1]}"`
-            : `${next[0]} = ${next[1]}`;
-
-        prev.push(pushData);
-
-        return prev;
-      }, []);
+      const updateData = queryJoin({ paramsObj: data, delimiters: "," });
 
       // Build filters data params query text
-      const filtersData = Object.entries(filters).reduce((prev, next) => {
-        const pushData =
-          typeof next === "string"
-            ? `${next[0]} = "${next[1]}"`
-            : `${next[0]} = ${next[1]}`;
-
-        prev.push(pushData);
-
-        return prev;
-      }, []);
+      const filtersData = queryJoin({
+        paramsObj: filters,
+        delimiters: ` AND `,
+      });
 
       // Build update query text
-      let query = `UPDATE \`${dataset}.${table}\` set ${updateData.join(",")}`;
-      query += ` WHERE ${filtersData.join(` AND `)}`;
+      let query = `UPDATE \`${dataset}.${table}\` set ${updateData}`;
+      query += ` WHERE ${filtersData}`;
 
       // Execute query
       const updateProcess = await model.query(query).catch((e) => {
-        return {
-          status: "failed",
-          error: e,
-          query,
-        };
+        throw e;
       });
 
-      return {
-        status: "success",
-        totalRows: updateProcess?.totalRows || 0,
-        totalBytesProcessed: updateProcess?.totalBytesProcessed || 0,
-        query,
-      };
+      return handleResponse({ query, process: updateProcess });
     },
 
     /**
@@ -167,38 +167,63 @@ const main = (datasource) => {
         };
 
       // Build delete data params query text
-      const filtersData = Object.entries(filters).reduce((prev, next) => {
-        const pushData =
-          typeof next === "string"
-            ? `${next[0]} = "${next[1]}"`
-            : `${next[0]} = ${next[1]}`;
-
-        prev.push(pushData);
-
-        return prev;
-      }, []);
+      const filtersData = queryJoin({
+        paramsObj: filters,
+        delimiters: " AND ",
+      });
 
       // Build delete query text
       let query = `DELETE FROM \`${dataset}.${table}\``;
-      query += ` WHERE ${filtersData.join(` AND `)}`;
+      query += ` WHERE ${filtersData}`;
 
       // Execute query
       const deleteProcess = await model.query(query).catch((e) => {
-        return { status: "failed", error: e, query };
+        throw e;
       });
 
-      return {
-        status: "success",
-        totalRows: deleteProcess?.totalRows || 0,
-        totalBytesProcessed: deleteProcess?.totalBytesProcessed || 0,
-        query,
-      };
+      return handleResponse({ query, process: deleteProcess });
     },
 
-    count: () => {},
+    /**
+     *
+     * @param {Object}
+     * @param
+     * @returns
+     */
+    count: async (filters = null) => {
+      let query = `SELECT COUNT(*) FROM \`${dataset}.${table}\``;
 
-    getLastData: () => {},
+      if (filters) {
+        if (!typeof filters === "object")
+          throw new Error("filters must be an object");
+
+        const filtersData = queryJoin({
+          paramsObj: filters,
+          delimiters: " AND ",
+        });
+
+        query += ` WHERE ${filtersData} `;
+      }
+
+      const countProcess = await model.query(query).catch((e) => {
+        throw e;
+      });
+
+      return handleResponse({ query, process: countProcess });
+    },
+
+    /** @TODO */
+    max: () => {
+      return handleResponse({});
+    },
   };
 };
 
+// Default export
 export default main;
+
+// Export for unit testing purpose
+export const units = {
+  handleResponse,
+  queryJoin,
+};
