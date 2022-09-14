@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BlockchainSpace-Dev/scraper-game-projects.git"
+    "url": "https://github.com/BlockchainSpace-Dev/bq-wrapper.git"
   },
   "keywords": [
     "bigquery"
@@ -17,9 +17,9 @@
   "author": "Munir AP",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/BlockchainSpace-Dev/scraper-game-projects/issues"
+    "url": "https://github.com/BlockchainSpace-Dev/bq-wrapper/issues"
   },
-  "homepage": "https://github.com/BlockchainSpace-Dev/scraper-game-projects#readme",
+  "homepage": "https://github.com/BlockchainSpace-Dev/bq-wrapper#readme",
   "dependencies": {
     "@google-cloud/bigquery": "^6.0.3"
   },
