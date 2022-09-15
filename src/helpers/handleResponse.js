@@ -14,7 +14,7 @@ export default ({
   error = null,
   query = null,
   process = null,
-}) => {
+} = {}) => {
   return {
     status,
     error,
