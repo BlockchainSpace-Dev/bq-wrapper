@@ -38,7 +38,14 @@ export default (datasource) => {
      * @returns {object} Object response
      */
     update: (data, filters) =>
-      update(model, handleResponse, queryJoin, data, filters),
+      update(
+        model,
+        { dataset, table },
+        handleResponse,
+        queryJoin,
+        data,
+        filters
+      ),
 
     /**
      * Delete data method
