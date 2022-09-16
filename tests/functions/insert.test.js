@@ -1,3 +1,6 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
 import { BigQuery } from "@google-cloud/bigquery";
 import { faker } from "@faker-js/faker";
 import { config } from "dotenv";
@@ -6,6 +9,9 @@ import { insert } from "../../src/functions/index.js";
 import { handleResponse } from "../../src/helpers/index.js";
 
 const bq = new BigQuery();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe("insert wrapper functions", () => {
   it("should throw error when data not an array or don't have items", async () => {
@@ -30,20 +36,59 @@ describe("insert wrapper functions", () => {
 
   describe("should pass intergration testing", () => {
     beforeAll(() => {
-      config({ path: "" });
+      config({ path: path.resolve(__dirname + "../../../.env.test") });
     });
 
     it("should inserted data with array list that lower than 1000 rows", async () => {
       // Given
-      const model = bq.dataset();
+      const model = bq.dataset(process.env.BQ_DATASET).table("contacts");
+
       const dummyContacts = [...Array(100).keys()].map((item) => ({
         name: faker.name.fullName(),
         address: faker.address.streetAddress(),
       }));
 
       // When
+      const testInsertProcess = await insert(
+        model,
+        handleResponse,
+        dummyContacts
+      );
 
       // Then
+      expect(testInsertProcess).toStrictEqual({
+        status: "success",
+        error: null,
+        query: null,
+        totalRows: 100,
+        totalBytesProcessed: 0,
+      });
+    });
+
+    it("should inserted data with array list that more than 1000 rows", async () => {
+      // Given
+      const model = bq.dataset(process.env.BQ_DATASET).table("contacts");
+
+      const dummyContacts = [...Array(1001).keys()].map((item) => ({
+        name: faker.name.fullName(),
+        address: faker.address.streetAddress(),
+      }));
+
+      // When
+      const testInsertProcess = await insert(
+        model,
+        handleResponse,
+        dummyContacts
+      );
+
+      // Then
+      expect(testInsertProcess).toStrictEqual({
+        status: "success",
+        error: null,
+        query: null,
+        totalRows: 1001,
+        totalBytesProcessed: 0,
+      });
     });
   });
 });

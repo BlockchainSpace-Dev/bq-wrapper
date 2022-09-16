@@ -108,3 +108,6 @@ dist
 
 # Jest code coverage
 coverage
+
+# VSCode Config
+.vscode
