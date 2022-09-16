@@ -42,9 +42,8 @@ export default (datasource) => {
         model,
         { dataset, table },
         handleResponse,
-        queryJoin,
-        data,
-        filters
+        queryJoin({ paramsObj: data }),
+        queryJoin({ paramsObj: filters, delimiters: " AND " })
       ),
 
     /**

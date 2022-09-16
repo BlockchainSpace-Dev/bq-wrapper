@@ -21,5 +21,6 @@ export default ({
     query,
     totalRows: process?.totalRows || 0,
     totalBytesProcessed: process?.totalBytesProcessed || 0,
+    data: process?.data || null,
   };
 };

@@ -11,10 +11,9 @@ export default async (
   model,
   datasource,
   handleResponse,
-  queryJoin,
-  filters
+  stringQueryFilters
 ) => {
-  if (!typeof datasource === "object" || !datasource)
+  if (typeof datasource !== "object" || !datasource)
     throw new Error("datasource is required and must be an object");
 
   if (!Object.keys(datasource)?.length)
@@ -22,24 +21,29 @@ export default async (
 
   let query = `SELECT COUNT(*) as count FROM \`${datasource.dataset}.${datasource.table}\``;
 
-  if (filters) {
-    if (!typeof filters === "object")
-      throw new Error("filters must be an object");
-
-    if (!Object.keys(filters).keys()?.length)
-      throw new Error("filters must have fields");
-
-    const filtersData = queryJoin({
-      paramsObj: filters,
-      delimiters: " AND ",
-    });
-
-    query += ` WHERE ${filtersData} `;
+  if (stringQueryFilters) {
+    query += ` WHERE ${stringQueryFilters} `;
   }
 
-  const countProcess = await model.query(query).catch((e) => {
-    throw e;
+  // Create job query
+  const [countJobs] = await model.createQueryJob({
+    query,
+    location: "asia-southeast1",
   });
 
-  return handleResponse({ query, process: countProcess });
+  // Execute job query
+  const [countProcess] = await countJobs
+    .getQueryResults(countJobs)
+    .catch((e) => {
+      throw e;
+    });
+
+  return handleResponse({
+    query,
+    process: {
+      totalBytesProcessed: countJobs?.metadata?.statistics?.totalBytesProcessed,
+      totalRows: countProcess?.length,
+      data: countProcess?.[0],
+    },
+  });
 };

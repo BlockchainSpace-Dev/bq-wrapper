@@ -15,19 +15,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 describe("update wrapper functions", () => {
-  it("should throw error when data or filters is not object or not have fields", async () => {
+  it("should throw error when string query and filter data is empty string or not defined", async () => {
     // Given
-    const testArguments = [null, null, null, null, null, null];
-    const testArguments1 = [null, null, null, null, {}, {}];
+    const testArguments = [null, null, null, null, null];
+    const testArguments1 = [null, null, null, "", ""];
 
     // When
 
     // Then
     await update(...testArguments).catch((error) => {
-      expect(error.message).toBe("data and filters must be an object");
+      expect(error.message).toBe(
+        "string query data and string query filters must be exists"
+      );
     });
     await update(...testArguments1).catch((error) => {
-      expect(error.message).toBe("data and filters must have fields");
+      expect(error.message).toBe(
+        "string query data and string query filters must be exists"
+      );
     });
   });
 
@@ -41,7 +45,7 @@ describe("update wrapper functions", () => {
       const model = bq.dataset(process.env.BQ_DATASET).table("contacts");
 
       const [[randomContacts]] = await model.query(
-        `SELECT * FROM \`testing.contacts\` ORDER BY rand() LIMIT 1`
+        `SELECT * FROM \`testing.contacts\` WHERE _PARTITIONTIME IS NOT NULL ORDER BY rand() LIMIT 1`
       );
 
       const newTestContacts = {
@@ -54,9 +58,8 @@ describe("update wrapper functions", () => {
         model,
         { dataset: "testing", table: "contacts" },
         handleResponse,
-        queryJoin,
-        newTestContacts,
-        randomContacts
+        queryJoin({ paramsObj: newTestContacts }),
+        queryJoin({ paramsObj: randomContacts, delimiters: " AND " })
       );
 
       // Then

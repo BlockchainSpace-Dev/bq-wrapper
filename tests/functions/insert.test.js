@@ -62,6 +62,7 @@ describe("insert wrapper functions", () => {
         query: null,
         totalRows: 100,
         totalBytesProcessed: 0,
+        data: null,
       });
     });
 
@@ -88,6 +89,7 @@ describe("insert wrapper functions", () => {
         query: null,
         totalRows: 1001,
         totalBytesProcessed: 0,
+        data: null,
       });
     });
   });
