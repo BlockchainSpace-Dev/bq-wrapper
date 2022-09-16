@@ -58,7 +58,13 @@ export default (datasource) => {
      * @param {object} filters Object of filters query
      * @returns {object} Object response
      */
-    count: (filters = null) => count(model, handleResponse, queryJoin, filters),
+    count: (filters = null) =>
+      count(
+        model,
+        { dataset, table },
+        handleResponse,
+        queryJoin({ paramsObj: filters })
+      ),
 
     /**
      * Find data method

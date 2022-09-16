@@ -3,8 +3,7 @@
  * @param {object} model Bigquery Model
  * @param {object} datasource Dataset & Table Name Object
  * @param {function} handleResponse Handle Response function
- * @param {function} queryJoin Query Join function
- * @param {object} filters Object of filters query
+ * @param {string} stringQueryFilters String of filters query
  * @returns {object} Object response
  */
 export default async (
