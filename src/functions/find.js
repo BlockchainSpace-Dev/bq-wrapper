@@ -2,45 +2,43 @@
  * Find/Select wrapper function
  * @param {object} model Bigquery Model
  * @param {function} handleResponse Handle Response function
- * @param {function} queryJoin Query Join function
- * @param {object} fields Object table fieldsname
- * @param {object} fitlers Object of filters query
+ * @param {object} queryOptions Object of Query Options (Fields, Filters, Limit, Offset)
  * @returns {object} Object response
  */
-export default async (model, handleResponse, queryJoin, fields, filters) => {
-  let fieldsData;
-  let query = `SELECT`;
-
-  if (fields) {
-    if (!typeof fields === "object")
-      throw new Error("fields must be an object");
-
-    fieldsData = queryJoin({
-      paramsObj: fields,
-      delimiters: ",",
-      type: "select",
-    });
-  }
-
-  query += fieldsData ? fieldsData : " *";
-
+export default async (model, handleResponse, queryOptions) => {
+  let query = `SELECT `;
+  query += queryOptions?.fields ? queryOptions?.fields : " *";
   query += ` FROM \`${dataset}.${table}\``;
 
-  if (filters) {
-    if (!typeof filters === "object")
-      throw new Error("filters must be an object");
+  if (queryOptions?.filters) query += ` WHERE ${queryOptions.filters}`;
 
-    const filtersData = queryJoin({
-      paramsObj: filters,
-      delimiters: " AND ",
-    });
-
-    query += ` WHERE ${filtersData} `;
+  if (queryOptions?.orders) {
+    query += ` ORDER BY ${
+      queryOptions.orders?.key || queryOptions.orders || 1
+    } ${queryOptions.orders?.type?.toUpperCase() || "ASC"}`;
   }
 
-  const countProcess = await model.query(query).catch((e) => {
+  if (queryOptions?.limit) query += ` LIMIT ${queryOptions.limit}`;
+
+  if (queryOptions?.offset) query += ` OFFSET ${queryOptions.offset}`;
+
+  // Create job query
+  const [findJobs] = await model.createQueryJob({
+    query,
+    location: "asia-southeast1",
+  });
+
+  // Execute job query
+  const [findProcess] = await findJobs.getQueryResults(findJobs).catch((e) => {
     throw e;
   });
 
-  return handleResponse({ query, process: countProcess });
+  return handleResponse({
+    query,
+    process: {
+      totalBytesProcessed: findJobs?.metadata?.statistics?.totalBytesProcessed,
+      totalRows: findProcess?.length,
+      data: findProcess?.[0],
+    },
+  });
 };

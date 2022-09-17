@@ -51,7 +51,13 @@ export default (datasource) => {
      * @param {Object} filters Object of filters query
      * @returns {Object} Object response
      */
-    delete: (filters) => remove(model, handleResponse, queryJoin, filters),
+    delete: (filters) =>
+      remove(
+        model,
+        { dataset, table },
+        handleResponse,
+        queryJoin({ paramsObj: filters, delimiters: " AND " })
+      ),
 
     /**
      * Count rows method
@@ -63,17 +69,22 @@ export default (datasource) => {
         model,
         { dataset, table },
         handleResponse,
-        queryJoin({ paramsObj: filters })
+        queryJoin({ paramsObj: filters, delimiters: " AND " })
       ),
 
     /**
      * Find data method
-     * @param {object} fields Object table fieldsname
-     * @param {object} fitlers Object of filters query
+     * @param {object} options Object table fieldsname
      * @returns {object} Object response
      */
-    find: (fields = null, filters = null) =>
-      find(model, handleResponse, queryJoin, fields, filters),
+    find: (options = {}) =>
+      find(model, { dataset, table }, handleResponse, {
+        fields: queryJoin({ paramsObj: options?.fields }),
+        filters: queryJoin({ paramsObj: options?.filters }),
+        limit: options?.limit,
+        offset: options?.offset,
+        orders: options?.orders,
+      }),
 
     /** @TODO */
     max: () => {},
