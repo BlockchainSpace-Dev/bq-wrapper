@@ -2,32 +2,43 @@
  * Delete/Remove wrapper function
  * @param {object} model Bigquery Model
  * @param {function} handleResponse Handle Response function
- * @param {function} queryJoin Query Join function
- * @param {object} filters Object of filters query
+ * @param {object} datasource Dataset & Table Name Object
+ * @param {string} stringQueryFilters string of filters query
  * @returns {object} Object response
  */
-export default async (model, handleResponse, queryJoin, filters) => {
-  if (!typeof filters === "object")
-    return {
-      status: failed,
-      error: new Error("filters must be an object"),
-      query: null,
-    };
-
-  // Build delete data params query text
-  const filtersData = queryJoin({
-    paramsObj: filters,
-    delimiters: " AND ",
-  });
+export default async (
+  model,
+  datasource,
+  handleResponse,
+  stringQueryFilters
+) => {
+  if (!stringQueryFilters)
+    throw new Error("string query filters must be exists");
 
   // Build delete query text
-  let query = `DELETE FROM \`${dataset}.${table}\``;
-  query += ` WHERE ${filtersData}`;
+  let query = `DELETE FROM \`${datasource.dataset}.${datasource.table}\``;
+  query += ` WHERE ${stringQueryFilters}`;
 
-  // Execute query
-  const deleteProcess = await model.query(query).catch((e) => {
-    throw e;
+  // Create job query
+  const [deleteJobs] = await model.createQueryJob({
+    query,
+    location: "asia-southeast1",
   });
 
-  return handleResponse({ query, process: deleteProcess });
+  // Execute query
+  const [deleteProcess] = await deleteJobs
+    .getQueryResults(deleteJobs)
+    .catch((e) => {
+      throw e;
+    });
+
+  return handleResponse({
+    query,
+    process: {
+      totalBytesProcessed:
+        deleteJobs?.metadata?.statistics?.totalBytesProcessed,
+      totalRows: deleteProcess?.length,
+      data: deleteProcess?.[0],
+    },
+  });
 };
