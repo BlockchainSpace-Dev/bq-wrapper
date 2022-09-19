@@ -80,7 +80,10 @@ export default (datasource) => {
     find: (options = {}) =>
       find(model, { dataset, table }, handleResponse, {
         fields: queryJoin({ paramsObj: options?.fields }),
-        filters: queryJoin({ paramsObj: options?.filters }),
+        filters: queryJoin({
+          paramsObj: options?.filters,
+          delimiters: " AND ",
+        }),
         limit: options?.limit,
         offset: options?.offset,
         orders: options?.orders,

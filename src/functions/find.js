@@ -1,14 +1,15 @@
 /**
  * Find/Select wrapper function
  * @param {object} model Bigquery Model
+ * @param {object} datasource Dataset & Table Name Objec
  * @param {function} handleResponse Handle Response function
  * @param {object} queryOptions Object of Query Options (Fields, Filters, Limit, Offset)
  * @returns {object} Object response
  */
-export default async (model, handleResponse, queryOptions) => {
+export default async (model, datasource, handleResponse, queryOptions = {}) => {
   let query = `SELECT `;
-  query += queryOptions?.fields ? queryOptions?.fields : " *";
-  query += ` FROM \`${dataset}.${table}\``;
+  query += queryOptions?.fields ? queryOptions?.fields : "*";
+  query += ` FROM \`${datasource.dataset}.${datasource.table}\``;
 
   if (queryOptions?.filters) query += ` WHERE ${queryOptions.filters}`;
 
