@@ -13,5 +13,10 @@ install package via npm
 npm install @blockchainspace-dev/bq-wrapper@1.0.0-alpha
 ```
 
-## test coverage
-![test-coverage-image](https://raw.githubusercontent.com/BlockchainSpace-Dev/bq-wrapper/main/test-coverage.png?token=GHSAT0AAAAAABQE6PDLQJHQQDXJSBTQDALUYZJ6BZQ)
+## unit & integration test
+running test
+```
+npm test
+```
+See resulst of test coverage image [here](https://github.com/BlockchainSpace-Dev/bq-wrapper/blob/main/test-coverage.png)
+
