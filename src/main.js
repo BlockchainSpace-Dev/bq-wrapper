@@ -2,7 +2,7 @@ import { BigQuery } from "@google-cloud/bigquery";
 
 import { handleResponse, queryJoin } from "./helpers/index.js";
 
-import { insert, update, remove, count, find } from "./functions/index.js";
+import { insert, update, remove, count, find, max } from "./functions/index.js";
 
 // Initiate Bigquery instance
 const bigquery = new BigQuery();
@@ -13,11 +13,11 @@ const bigquery = new BigQuery();
  * @returns {object}
  */
 export default (datasource) => {
-  if (!typeof datasource === "string")
+  if (typeof datasource !== "string")
     throw new Error("datasource must be a text");
 
   if (!datasource?.includes("."))
-    throw new Errror("datasource has wrong format string");
+    throw new Error("datasource has wrong format");
 
   const [dataset, table] = datasource.split(".");
 
@@ -89,16 +89,36 @@ export default (datasource) => {
         orders: options?.orders,
       }),
 
-    /** @TODO */
-    max: () => {},
+    /**
+     * Max rows method
+     * @param {string} fieldname table fieldname
+     * @param {object} filters Object of filters query
+     * @returns {object} Object response
+     */
+    max: (fieldname, filters = null) =>
+      max(
+        model,
+        { dataset, table },
+        handleResponse,
+        fieldname,
+        queryJoin({ paramsObj: filters, delimiters: " AND " })
+      ),
 
-    /** @TODO */
-    isExsists: () => {},
+    /**
+     * Check table if exists
+     * @returns {boolean} status exists
+     */
+    isExists: async () => (await model.exists())?.[0],
 
-    /** @TODO */
-    metadata: () => {},
+    /**
+     * Get Metada method
+     * @returns {object} object metadata
+     */
+    metadata: async () => (await model.getMetadata())?.[0]?.schema?.fields,
 
-    /** @TODO */
-    create: () => {},
+    /**
+     * Direct Module for Bigquery Model
+     */
+    model,
   };
 };

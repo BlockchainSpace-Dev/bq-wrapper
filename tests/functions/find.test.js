@@ -13,7 +13,7 @@ const bq = new BigQuery();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-describe("insert wrapper functions", () => {
+describe("find wrapper functions", () => {
   describe("should pass intergration testing", () => {
     beforeAll(() => {
       config({ path: path.resolve(__dirname + "../../../.env.test") });
@@ -23,12 +23,12 @@ describe("insert wrapper functions", () => {
       // Given
       const model = bq.dataset(process.env.BQ_DATASET).table("contacts");
 
-      const [[randomContacts]] = await model.query(
+      const [randomContacts] = await model.query(
         `SELECT * FROM \`testing.contacts\``
       );
 
       // When
-      const findUpdateProcess = await find(
+      const findProcess = await find(
         model,
         {
           dataset: "testing",
@@ -38,13 +38,10 @@ describe("insert wrapper functions", () => {
       );
 
       // Then
-      expect(findUpdateProcess.status).toBe("success");
-      expect(findUpdateProcess.error).toBe(null);
-      expect(findUpdateProcess.query).toBe(
-        `SELECT * FROM \`testing.contacts\``
-      );
-      expect(findUpdateProcess.data.length).toBe(randomContacts.length);
-      expect(findUpdateProcess.data).toStrictEqual(randomContacts);
+      expect(findProcess.status).toBe("success");
+      expect(findProcess.error).toBe(null);
+      expect(findProcess.query).toBe(`SELECT * FROM \`testing.contacts\``);
+      expect(findProcess.data[0].length).toBe(randomContacts[0].length);
     });
 
     it("shold select data with certain parameters", async () => {
@@ -53,10 +50,10 @@ describe("insert wrapper functions", () => {
 
       const expectedQuery = `SELECT name AS fullName FROM \`testing.contacts\` WHERE name LIKE "%a%" AND address LIKE "%a%" ORDER BY name DESC LIMIT 2 OFFSET 3`;
 
-      const [[randomContacts]] = await model.query(expectedQuery);
+      const [randomContacts] = await model.query(expectedQuery);
 
       // When
-      const findUpdateProcess = await find(
+      const findProcess = await find(
         model,
         {
           dataset: "testing",
@@ -81,11 +78,11 @@ describe("insert wrapper functions", () => {
       );
 
       // Then
-      expect(findUpdateProcess.status).toBe("success");
-      expect(findUpdateProcess.error).toBe(null);
-      expect(findUpdateProcess.query).toBe(expectedQuery);
-      expect(findUpdateProcess.data.length).toBe(randomContacts.length);
-      expect(findUpdateProcess.data).toStrictEqual(randomContacts);
+      expect(findProcess.status).toBe("success");
+      expect(findProcess.error).toBe(null);
+      expect(findProcess.query).toBe(expectedQuery);
+      expect(findProcess.data[0].length).toBe(randomContacts[0].length);
+      expect(findProcess.data).toStrictEqual(randomContacts);
     });
   });
 });

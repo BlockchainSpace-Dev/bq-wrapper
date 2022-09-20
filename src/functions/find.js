@@ -39,7 +39,7 @@ export default async (model, datasource, handleResponse, queryOptions = {}) => {
     process: {
       totalBytesProcessed: findJobs?.metadata?.statistics?.totalBytesProcessed,
       totalRows: findProcess?.length,
-      data: findProcess?.[0],
+      data: findProcess,
     },
   });
 };
