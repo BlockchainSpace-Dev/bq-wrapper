@@ -14,3 +14,4 @@ npm i -s @blockchainspace-dev/bq-wrapper
 ```
 
 ## test coverage
+![test-coverage-image](https://raw.githubusercontent.com/BlockchainSpace-Dev/bq-wrapper/main/test-coverage.png?token=GHSAT0AAAAAABQE6PDLQJHQQDXJSBTQDALUYZJ6BZQ)
