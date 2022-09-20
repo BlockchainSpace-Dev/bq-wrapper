@@ -10,7 +10,7 @@ registry=https://registry.npmjs.org/
 ```
 install package via npm
 ```
-npm i -s @blockchainspace-dev/bq-wrapper
+npm install @blockchainspace-dev/bq-wrapper@1.0.0-alpha
 ```
 
 ## test coverage
