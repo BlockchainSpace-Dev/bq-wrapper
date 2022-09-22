@@ -6,7 +6,7 @@ create and setup `.npmrc` files then put it on your work home directory or root 
 ```
 registry=https://registry.npmjs.org/
 @blockchainspace-dev:registry=https://npm.pkg.github.com/
-//npm.pkg.github.com:_authToken=<GITHUB_TOKEN>
+//npm.pkg.github.com/:_authToken=<GITHUB_TOKEN>
 ```
 install package via npm
 ```
