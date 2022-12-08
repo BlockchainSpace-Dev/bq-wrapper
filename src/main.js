@@ -4,17 +4,29 @@ import { handleResponse, queryJoin } from "./helpers/index.js";
 
 import { insert, update, remove, count, find, max } from "./functions/index.js";
 
-// Initiate Bigquery instance
-const bigquery = new BigQuery();
-
 /**
  * Database/Repository constructor
  * @param {string} datasource Name of data source, example: dataset.tablename
  * @returns {object}
  */
-export default (datasource) => {
+export default (datasource, options) => {
   if (typeof datasource !== "string")
     throw new Error("datasource must be a text");
+
+  if (options && typeof options !== "object")
+    throw new Error("options must be an object");
+
+  const bqOptions = options
+    ? options
+    : {
+        scopes: [
+          "https://www.googleapis.com/auth/bigquery",
+          "https://www.googleapis.com/auth/drive",
+        ],
+      };
+
+  // Initiate Bigquery instance
+  const bigquery = new BigQuery(bqOptions);
 
   if (!datasource?.includes("."))
     throw new Error("datasource has wrong format");
