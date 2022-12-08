@@ -5,12 +5,12 @@ import { handleResponse, queryJoin } from "./helpers/index.js";
 import { insert, update, remove, count, find, max } from "./functions/index.js";
 
 // Initiate Bigquery instance
-const bigquery = new BigQuery(
+const bigquery = new BigQuery({
   scopes: [
     "https://www.googleapis.com/auth/bigquery",
     "https://www.googleapis.com/auth/drive",
   ],
-);
+});
 
 /**
  * Database/Repository constructor
